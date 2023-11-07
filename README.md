@@ -31,3 +31,4 @@ summary(CEO_Diary[1:5])
 fit <- glm(strategy ~ consultants + politicians, data=CEO_Diary); summary(fit)
 
 PrintBibliography(bib, start = 1, end = 6)
+
