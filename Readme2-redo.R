@@ -28,7 +28,7 @@ bib <- ReadBib("../refs/references.bib", check = FALSE) ##Could be useful later 
 
 ##FIRST PART: UNCERTAINTY
 setwd("~/Master/Data analysis")
-CEO_Diary <- read.csv("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysissurvey_response_data.csv")
+CEO_Diary <- read.csv("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/survey_response_data.csv")
 
 View(CEO_Diary)
 
@@ -368,18 +368,26 @@ plot(Na ~ type, data=fgl, col=c(grey(.2),2:6), las=2)
 plot(Mg ~ type, data=fgl, col=c(grey(.2),2:6), las=2)
 plot(Ba ~ type, data=fgl, col=c(grey(.2),2:6), las=2)
 plot(Si ~ type, data=fgl, col=c(grey(.2),2:6), las=2)
+plot(Si ~ type, data=fgl)
+plot(Si ~ type, data=fgl, col=c(grey(.2),2:6), las=2)
 
 x <- scale(fgl[,1:9]) # column 10 is class label, scale converts to mean 0 sd 1
 apply(x,2,sd) # apply function sd to columns of x
-
+View(x)
 library(class) #has knn function 
 test <- sample(1:214,10) #draw a random sample of 10 rows 
 nearest1 <- knn(train=x[-test,], test=x[test,], cl=fgl$type[-test], k=1)
 nearest5 <- knn(train=x[-test,], test=x[test,], cl=fgl$type[-test], k=5)
 data.frame(fgl$type[test],nearest1,nearest5)
 
+test2 <- sample(1:214, 20)
+nearest1 <- knn(train=x[-test,], test=x[test,], cl=fgl$type[-test], k=1)
+nearest5 <- knn(train=x[-test,], test=x[test,], cl=fgl$type[-test], k=5)
+data.frame(fgl$type[test],nearest1,nearest5)
+
 #### ******* German Credit Data ******* ####
-credit <- read.csv("../Data/credit.csv")
+credit <- read.csv("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/credit.csv")
+View(credit)
 ## re-level the credit history and checking account status
 credit$history = factor(credit$history, levels=c("A30","A31","A32","A33","A34"))
 levels(credit$history) = c("good","good","poor","poor","terrible")
@@ -414,11 +422,21 @@ sum(coef(credscore$gamlr, s=which.min(AIC(credscore$gamlr)))!=0) # AIC
 
 pred <- predict(credscore$gamlr, credx, type="response")
 pred <- drop(pred) # remove the sparse Matrix formatting
-boxplot(pred ~ default, xlab="default", ylab="prob of default", col=c("pink","dodgerblue"))
+boxplot(pred ~ default, xlab="default", ylab="prob of default", col=c("purple","grey"))
 
 rule <- 1/5 # move this around to see how these change
 sum( (pred>rule)[default==0] )/sum(pred>rule) ## false positive rate at 1/5 rule
 sum( (pred<rule)[default==1] )/sum(pred<rule) ## false negative rate at 1/5 rule
+
+rule <- 1/10 # move this around to see how these change
+sum( (pred>rule)[default==0] )/sum(pred>rule) ## false positive rate at 1/5 rule
+sum( (pred<rule)[default==1] )/sum(pred<rule) ## false negative rate at 1/5 rule
+##Now a lot lower in both
+
+rule <- 1/2 # move this around to see how these change
+sum( (pred>rule)[default==0] )/sum(pred>rule) ## false positive rate at 1/5 rule
+sum( (pred<rule)[default==1] )/sum(pred<rule) ## false negative rate at 1/5 rule
+## Now it is a lot higher
 
 sum( (pred>rule)[default==1] )/sum(default==1) ## sensitivity
 sum( (pred<rule)[default==0] )/sum(default==0) ## specificity
@@ -433,6 +451,12 @@ source("roc.R")
 png(file="ROCCurve.png", width=600, height=350)
 par(mai=c(.9,.9,.2,.1), mfrow=c(1,2))
 roc(p=pred, y=default, bty="n", main="in-sample")
+##Errors, both could not find roc.R and could not find function roc
+install.packages("pROC")
+library(pROC)
+roc(p=pred, y=default, bty="n", main="in-sample")
+## roc now runs but gives an error from argument 1 having a match to multiple formal arguments
+
 ## our 1/5 rule cutoff
 points(x= 1-mean((pred<.2)[default==0]), 
        y=mean((pred>.2)[default==1]), 
@@ -455,9 +479,10 @@ points(x= 1-mean((predoos<.5)[defaultoos==0]),
 dev.off()
 
 knitr::include_graphics("ROCCurve.png")
-
+##All of these do not run because of the errors in the running of the roc command. 
 par(mai=c(.8,.8,.1,.1))
 plot(factor(Default) ~ history, data=credit, col=c(8,2), ylab="Default") 
+#Again do not get plots!!
 
 library(glmnet)
 xfgl <- sparse.model.matrix(type~.*RI, data=fgl)[,-1] #Design matrix includes chemical composition variables and all their interactions with refractive index (RI).
@@ -466,6 +491,8 @@ glassfit <- cv.glmnet(xfgl, gtype, family="multinomial") #cross validation exper
 glassfit
 
 plot(glassfit)
+## Does not show up. Even with the change in the R-markdown
+
 par(mfrow=c(2,3), mai=c(.6,.6,.4,.4)) 
 plot(glassfit$glm, xvar="lambda")
 
@@ -527,16 +554,17 @@ dcoef <- summary(orig <- glm(y ~ d + t + s +., data=controls) )$coef['d',][1]
 exp(dcoef) - 1
 
 ######
-cell <- read.csv("../Data/us_cellphone.csv")
+cell <- read.csv("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/us_cellphone.csv")
 cellrate <- 5*cell[,2]/(1000*cell[,3]) # center on 1985 and scale by 1997-1985
 
 par(mai=c(.9,.9,.1,.1))
 plot(1985:1997, tapply(d, t, mean), bty="n", xlab="year", ylab="rate", pch=21, bg=2)
 points(1985:1997, cellrate, bg=4, pch=21)
 legend("topleft", fill=c(2,4), legend=c("abortions","cellphones"), bty="n")
+##Plot gives error, cant figure out how to fix it. Error in unique.default(x, nmax = nmax) : unique() applies only to vectors
 
-
-phone <- cellrate[ t + 1 ]
+phone <- cellrate[t + 1]
+##Gives that t+1 has a non-numeric argument. Doesnt work
 tech <- summary(glm(y ~ phone + t + s +., data=controls))$coef['phone',]
 phonecoef <- tech[1]
 exp(phonecoef) - 1
@@ -573,7 +601,8 @@ coef(summary( glm( y ~ d + dhat) ))
 causal <- cv.gamlr(cbind(d,dhat,x),y,free=2,lmr=1e-3)
 coef(causal, select="min")["d",] 
 # AICc says abortion rate has no causal effect on crime.
-
+##Until here, there were purely errors. I cant figure out where they are coming from. Will look into this next week, but too complicated for now.
+###From here on, everything runs.
 
 library(gamlr)
 data(hockey)
@@ -606,7 +635,7 @@ CI = fit + c(-2,2)*se.fit
 
 ########PART TWO
 library(Matrix)
-data <- read.table("../Data/abortion.dat", skip=1, sep="\t")
+data <- read.table("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/abortion.dat", skip=1, sep="\t")
 names(data) <- c("state","year","pop","y_viol","y_prop","y_murd",
                  "a_murd","a_viol","a_prop",'prison','police',
                  'ur','inc','pov','afdc','gun','beer')
@@ -620,9 +649,10 @@ controls <- data.frame(data[,c(3,10:17)])
 ## note we also have violent and property crime versions
 y <- data$y_murd
 d <- data$a_murd
-cell <- read.csv("../Data/us_cellphone.csv")
+cell <- read.csv("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis//us_cellphone.csv")
 cellrate <- 5*cell[,2]/(1000*cell[,3]) # center on 1985 and scale by 1997-1985
 phone <- cellrate[ t + 1 ]
+###This one does work, which is weird because had the same numeric argument?
 t <- factor(t)
 sna <- factor(s, levels=c(NA,levels(s)), exclude=NULL)
 x <- sparse.model.matrix( ~ t + phone*sna + .^2, data=controls)[,-1]
@@ -672,9 +702,9 @@ head(resids$ytil)
 
 library(foreign)
 
-descr <- read.dta("../Data/oregonhie_descriptive_vars.dta")
-prgm <- read.dta("../Data/oregonhie_stateprograms_vars.dta")
-s12 <- read.dta("../Data/oregonhie_survey12m_vars.dta")
+descr <- read.dta("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/oregonhie_descriptive_vars.dta")
+prgm <- read.dta("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/oregonhie_stateprograms_vars.dta")
+s12 <- read.dta("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/oregonhie_survey12m_vars.dta")
 
 # nicely organized, one row per person
 all(s12$person_id == descr$person_id)
@@ -744,6 +774,7 @@ round( summary(lin)$coef["selected",],4) # 6-7% increase in prob
 
 levels(X$edu_12m)
 source("naref.R")
+##This command again has trouble, I cant figure out what this means
 levels(naref(X$edu_12m))
 X <- naref(X) #makes NA the base group
 
@@ -762,6 +793,13 @@ mzimpute <- function(v){
 xnum <- apply(xnum, 2,  mzimpute)
 xnum[66:70,]
 
+mzimpute <- function(v){ 
+  if(mean(v==0,na.rm=TRUE) > 0.7) impt <- 0
+  else impt <- mean(v, na.rm=TRUE)
+  v[is.na(v)] <- impt
+  return(v) }
+xnum <- apply(xnum, 2,  mzimpute)
+xnum[69:70,]
 
 
 # replace/add the variables in new data frame 
@@ -779,11 +817,12 @@ colnames(dxhte) <- paste("d",colnames(xhte), sep=".")
 htedesign <- cbind(xhte,d=P$selected,dxhte)
 # include the numhh controls and baseline treatment without penalty 
 htefit <- gamlr(x=htedesign, y=P$doc_any_12m, free=c("numhh2","numhh3+","d"))
+#Get error, think this is because of the error i could not solve surrounding the source command
 gam <- coef(htefit)[-(1:(ncol(xhte)+1)), ]
 round(sort(gam)[1:6],4)
 round(sort(gam, decreasing=TRUE)[1:6],4)
 
-load("../Data/dominicks-beer.rda")
+load("C:/Users/Gebruiker/OneDrive - Erasmus University Rotterdam/Documents/Master/Data analysis/dominicks-beer.rda")
 head(wber)
 wber = wber[sample(nrow(wber), 100000), ]
 head(upc)
@@ -812,10 +851,11 @@ naivefit <- gamlr(x=cbind(lp=wber$lp,controls)[,], y=log(wber$MOVE), free=1, sta
 print( coef(naivefit)[1:2,] )
 # orthogonal ML 
 resids <- orthoLTE( x=controls, d=wber$lp, y=log(wber$MOVE), dreg=dreg, yreg=yreg, nfold=5)
+##Cant find this command, but downloaded the package?
 
 # interact items and text with price
-#lpxu <- xu*wber$lp
-#colnames(lpxu) <- paste("lp",colnames(lpxu),sep="")
+lpxu <- xu*wber$lp
+colnames(lpxu) <- paste("lp",colnames(lpxu),sep="")
 # create our interaction matrix
 xhte <- cbind(BASELINE=1,descr[wber$UPC,])
 d <- xhte*wber$lp
@@ -831,7 +871,7 @@ gamfull <- drop(eachbeer%*%coef(fullhte)[2:(ncol(d)+1),])
 coef(fullhte)
 
 hist(gamfull, main="", xlab="elasticity", col="darkgrey", freq=FALSE)
-
+##Still no plots again, frustrating
 
 
 
