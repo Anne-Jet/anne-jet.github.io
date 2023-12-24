@@ -1,9 +1,8 @@
 # anne-jet.github.io
 
+data <- read.csv("C://Users//Gebruiker//OneDrive - Erasmus University Rotterdam//Documents//Master//Data analysis//survey_response_data.csv")
 
-data <- read.csv("C:\\Users\\Gebruiker\\OneDrive - Erasmus University Rotterdam\\Documents\\Master\\Data analysis\\survey_response_data.csv")
-
-CEO_Diary <- read.csv("C:\\Users\\Gebruiker\\OneDrive - Erasmus University Rotterdam\\Documents\\Master\\Data analysis\\survey_response_data.csv")
+CEO_Diary <- read.csv("C:\Users\Gebruiker\OneDrive - Erasmus University Rotterdam\Documents\Master\Data analysis\survey_response_data.csv")
 
 View(CEO_Diary)
 
